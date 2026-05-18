@@ -1,0 +1,137 @@
+# Small Business Operations MCP Agent
+
+Local-first [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server for day-to-day small business work: **tasks**, **expenses**, **customers / CRM notes**, **inventory**, and **sample-based financial analytics**. Live ops data lives in **SQLite** on your machine (no cloud by default); bundled CSVs are **synthetic** for demos.
+
+## Requirements
+
+- Python 3.10+
+- [`mcp`](https://pypi.org/project/mcp/) (installed with this project)
+
+## Install
+
+```bash
+cd /Users/oscarvalles/Small_biz_operationsMCP_agent
+python3 -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -e .
+```
+
+## Data directory
+
+- Default: `~/.small_biz_ops_mcp/operations.db`
+- Override: set `SMALL_BIZ_OPS_DATA` to a directory path (the database file will be `operations.db` inside it).
+
+### Finance CSV folder
+
+Resolution order (first match wins):
+
+1. **`SMALL_BIZ_OPS_FINANCE_DATA`** — absolute path to a directory containing the expected CSV filenames.
+2. **Saved override** — `finance_config.json` in the same directory as `operations.db` (written by the web UI or MCP tool `set_finance_data_directory`).
+3. **Bundled** — `small_biz_ops_mcp/sample_data/` inside the installed package.
+
+## Web UI (local dashboard)
+
+Minimal browser UI for the same SQLite snapshot and finance analytics.
+
+```bash
+cd /Users/oscarvalles/Small_biz_operationsMCP_agent
+source .venv/bin/activate
+small-biz-ops-ui
+# or: python -m small_biz_ops_mcp.web
+```
+
+Then open **http://127.0.0.1:8844** (default). Override with **`SMALL_BIZ_OPS_UI_PORT`** and **`SMALL_BIZ_OPS_UI_HOST`**.
+
+The UI can set the finance CSV directory (writes `finance_config.json` next to `operations.db`). If **`SMALL_BIZ_OPS_FINANCE_DATA`** is set in the environment, it takes priority over that file.
+
+## Run (stdio, for Cursor / Claude Desktop)
+
+```bash
+cd /Users/oscarvalles/Small_biz_operationsMCP_agent
+source .venv/bin/activate
+python -m small_biz_ops_mcp
+```
+
+Or after install:
+
+```bash
+small-biz-ops-mcp
+```
+
+## Cursor MCP configuration
+
+Add to your MCP config (e.g. **Cursor Settings → MCP → Edit**), adjusting paths if your clone lives elsewhere:
+
+```json
+{
+  "mcpServers": {
+    "small-biz-ops": {
+      "command": "/Users/oscarvalles/Small_biz_operationsMCP_agent/.venv/bin/python",
+      "args": ["-m", "small_biz_ops_mcp"],
+      "env": {
+        "SMALL_BIZ_OPS_DATA": "/Users/oscarvalles/Small_biz_operationsMCP_agent/.data"
+      }
+    }
+  }
+}
+```
+
+If you prefer `uv`:
+
+```json
+{
+  "mcpServers": {
+    "small-biz-ops": {
+      "command": "uv",
+      "args": ["run", "--directory", "/Users/oscarvalles/Small_biz_operationsMCP_agent", "python", "-m", "small_biz_ops_mcp"]
+    }
+  }
+}
+```
+
+Restart Cursor (or reload MCP) after saving. Optionally add **`SMALL_BIZ_OPS_FINANCE_DATA`** to `env` (absolute path to your CSV folder) so MCP ignores any saved `finance_config.json` override.
+
+## Tools
+
+| Tool | Purpose |
+|------|--------|
+| `create_task` | New task (`open`); optional `due_date` (YYYY-MM-DD), `priority` |
+| `list_tasks` | List tasks; optional `status` filter |
+| `update_task_status` | `open` / `in_progress` / `done` / `cancelled` |
+| `log_expense` | Amount in **USD**, category, optional vendor / note / date |
+| `list_expenses` | Optional `start_date` / `end_date` (YYYY-MM-DD) |
+| `upsert_customer` | Create or update customer; optional `customer_id` to update |
+| `add_customer_interaction` | Log a CRM-style note; optional `follow_up_date` |
+| `list_customers` | Optional substring `search` |
+| `get_customer` | Customer + recent interactions |
+| `stock_set` | Create or **replace** quantity for a SKU |
+| `stock_adjust` | Increment / decrement stock |
+| `list_inventory` | Optional `low_stock_threshold` filter |
+| `operations_snapshot` | Counts, month-to-date expenses (UTC month), DB path |
+| `get_finance_data_directory` | Active finance CSV folder, source (`env` / `config` / `bundled`), and which expected files exist |
+| `set_finance_data_directory` | Save or clear finance folder in `finance_config.json` (empty clears); env `SMALL_BIZ_OPS_FINANCE_DATA` overrides |
+| `analyze_monthly_sales` | Monthly revenue, delivery mix, MoM %; optional `csv_file` path (else `daily_sales.csv` in active finance dir) |
+| `detect_expense_anomalies` | IQR + z-score flags on monthly payroll, COGS, rent, utilities, inventory purchases (active finance dir) |
+| `summarize_profit_margin` | Gross and simplified operating margin by month (active finance dir) |
+| `compare_payroll_to_revenue` | Payroll vs revenue % by month (active finance dir) |
+| `generate_buyer_due_diligence_packet` | Markdown draft: analytics + live ops snapshot (**not** legal/financial advice) |
+| `create_weekly_owner_report` | Markdown brief: recent sales vs prior weeks, margins, anomalies, live snapshot |
+
+## Bundled sample CSVs (synthetic)
+
+Shipped under `small_biz_ops_mcp/sample_data/` (Jan–Apr 2026 demo period):
+
+| File | Contents |
+|------|-----------|
+| `daily_sales.csv` | Daily in-store and delivery revenue |
+| `delivery_sales.csv` | Daily delivery revenue only |
+| `payroll_monthly.csv` | Monthly payroll |
+| `cost_of_goods_monthly.csv` | Monthly COGS |
+| `rent_monthly.csv` | Monthly rent |
+| `utilities_monthly.csv` | Monthly utilities (includes a March spike for anomaly demos) |
+| `inventory_purchases.csv` | Dated purchase lines |
+
+## Resources and prompts
+
+- Resource: `operations://snapshot` — same data as `operations_snapshot`
+- Prompt: `weekly_ops_review` — template for a weekly review using the tools above

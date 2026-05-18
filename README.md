@@ -16,6 +16,19 @@ source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -e .
 ```
 
+## CLI demo (no Cursor required)
+
+Prints the same flows the MCP tools expose (uses a **throwaway** SQLite dir unless you pass `--data-dir`):
+
+```bash
+cd /Users/oscarvalles/Small_biz_operationsMCP_agent
+source .venv/bin/activate
+python demo_session.py
+
+# Or reuse a fixed folder:
+python demo_session.py --data-dir /tmp/smbiz_demo
+```
+
 ## Data directory
 
 - Default: `~/.small_biz_ops_mcp/operations.db`

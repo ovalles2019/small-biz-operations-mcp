@@ -8,6 +8,15 @@ dependencies = [
     "mcp[cli]>=1.8.0",
 ]
 
+[project.optional-dependencies]
+web = [
+    "starlette>=0.37.0",
+    "uvicorn[standard]>=0.30.0",
+]
+agents = [
+    "openai>=1.40.0",
+]
+
 [project.scripts]
 small-biz-ops-mcp = "small_biz_ops_mcp.server:main"
 small-biz-ops-ui = "small_biz_ops_mcp.web.__main__:main"

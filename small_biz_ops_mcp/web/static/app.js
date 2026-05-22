@@ -37,7 +37,25 @@ async function loadDashboard() {
   }
 }
 
+function applyDemoMode(demo) {
+  const banner = $("demo-banner");
+  const controls = $("finance-controls");
+  const hint = $("finance-hint");
+  if (banner) banner.style.display = demo ? "block" : "none";
+  if (controls) controls.style.display = demo ? "none" : "";
+  if (hint) {
+    hint.textContent = demo
+      ? "Finance CSVs use bundled sample data in demo mode."
+      : "Set a folder containing the expected CSV names (see README). Empty save clears the override. Environment variable SMALL_BIZ_OPS_FINANCE_DATA overrides saved path.";
+  }
+  if (demo) {
+    setText("eyebrow", "Portfolio demo");
+    setText("tagline", "MCP-backed ops tools with a live dashboard — synthetic finance, seeded SQLite.");
+  }
+}
+
 function render(d) {
+  applyDemoMode(!!d.demo_mode);
   const fin = d.finance || {};
   const src = fin.source || "—";
   setText("finance-source", src);

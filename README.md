@@ -55,7 +55,43 @@ small-biz-ops-ui
 
 Then open **http://127.0.0.1:8844** (default). Override with **`SMALL_BIZ_OPS_UI_PORT`** and **`SMALL_BIZ_OPS_UI_HOST`**.
 
+Install web dependencies if needed:
+
+```bash
+pip install -e ".[web]"
+```
+
 The UI can set the finance CSV directory (writes `finance_config.json` next to `operations.db`). If **`SMALL_BIZ_OPS_FINANCE_DATA`** is set in the environment, it takes priority over that file.
+
+## Live demo (portfolio)
+
+Deploy the **read-only dashboard** (bundled sample CSVs + seeded SQLite). MCP stdio stays local; the public URL is for the web UI only.
+
+### Render (recommended)
+
+1. Push this repo to GitHub (`ovalles2019/small-biz-operations-mcp`).
+2. [Render](https://render.com) → **New** → **Blueprint** → connect the repo.
+3. Render applies `render.yaml` and builds the `Dockerfile`.
+4. Copy the service URL (e.g. `https://small-biz-ops-demo.onrender.com`) into your portfolio.
+
+Demo env (set in `render.yaml` / Docker):
+
+- `SMALL_BIZ_OPS_DEMO=1` — seeds sample tasks/customers/inventory on first boot; disables finance path edits.
+- `SMALL_BIZ_OPS_DATA=/data` — SQLite on the container disk (resets on redeploy on free tier).
+
+Health check: `GET /health`
+
+### Docker (local smoke test)
+
+```bash
+docker build -t small-biz-ops-demo .
+docker run --rm -p 8844:10000 -e PORT=10000 small-biz-ops-demo
+# open http://127.0.0.1:8844
+```
+
+### Railway / Fly.io
+
+Same image: build from `Dockerfile`, set `PORT` (platform injects it), `SMALL_BIZ_OPS_DEMO=1`, and `SMALL_BIZ_OPS_DATA` to a writable path.
 
 ## Run (stdio, for Cursor / Claude Desktop)
 

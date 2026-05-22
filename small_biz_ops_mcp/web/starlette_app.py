@@ -12,7 +12,8 @@ from starlette.responses import FileResponse, JSONResponse
 from starlette.routing import Mount, Route
 from starlette.staticfiles import StaticFiles
 
-from small_biz_ops_mcp import analytics, finance_paths, store
+from small_biz_ops_mcp import analytics, demo_seed, finance_paths, store
+from small_biz_ops_mcp.web.demo_mode import is_demo_mode
 
 STATIC = Path(__file__).resolve().parent / "static"
 
@@ -20,7 +21,13 @@ STATIC = Path(__file__).resolve().parent / "static"
 @asynccontextmanager
 async def lifespan(_: Starlette):
     store.init_db()
+    if is_demo_mode():
+        demo_seed.seed_demo_if_empty()
     yield
+
+
+async def api_health(_: Request) -> JSONResponse:
+    return JSONResponse({"ok": True, "demo": is_demo_mode()})
 
 
 async def index(_: Request) -> FileResponse:
@@ -32,6 +39,11 @@ async def api_finance_get(_: Request) -> JSONResponse:
 
 
 async def api_finance_post(request: Request) -> JSONResponse:
+    if is_demo_mode():
+        return JSONResponse(
+            {"ok": False, "error": "Finance path changes are disabled in demo mode."},
+            status_code=403,
+        )
     try:
         body = await request.json()
     except Exception:
@@ -59,6 +71,7 @@ def _safe(name: str, fn: Any) -> dict[str, Any]:
 
 async def api_dashboard(_: Request) -> JSONResponse:
     payload: dict[str, Any] = {
+        "demo_mode": is_demo_mode(),
         "finance": finance_paths.finance_metadata(),
         "snapshot": store.operations_snapshot(),
         "sales": _safe("sales", lambda: analytics.analyze_monthly_sales(None)),
@@ -71,6 +84,7 @@ async def api_dashboard(_: Request) -> JSONResponse:
 
 routes = [
     Route("/", index),
+    Route("/health", api_health, methods=["GET"]),
     Route("/api/finance", api_finance_get, methods=["GET"]),
     Route("/api/finance", api_finance_post, methods=["POST"]),
     Route("/api/snapshot", api_snapshot, methods=["GET"]),

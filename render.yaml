@@ -1,0 +1,13 @@
+# Deploy the portfolio dashboard on Render (https://render.com)
+# Connect this repo → New Blueprint → apply this file.
+services:
+  - type: web
+    name: small-biz-ops-demo
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: SMALL_BIZ_OPS_DEMO
+        value: "1"
+      - key: SMALL_BIZ_OPS_DATA
+        value: /data

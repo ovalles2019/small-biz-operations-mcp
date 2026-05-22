@@ -10,8 +10,9 @@ def main() -> None:
 
     from small_biz_ops_mcp.web.starlette_app import app
 
-    host = os.environ.get("SMALL_BIZ_OPS_UI_HOST", "127.0.0.1")
-    port = int(os.environ.get("SMALL_BIZ_OPS_UI_PORT", "8844"))
+    port = int(os.environ.get("PORT") or os.environ.get("SMALL_BIZ_OPS_UI_PORT", "8844"))
+    default_host = "0.0.0.0" if os.environ.get("PORT") else "127.0.0.1"
+    host = os.environ.get("SMALL_BIZ_OPS_UI_HOST", default_host)
     uvicorn.run(app, host=host, port=port, log_level="info")
 
 

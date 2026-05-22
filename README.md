@@ -1,5 +1,7 @@
 # Small Business Operations MCP Agent
 
+[![Live demo](https://img.shields.io/badge/demo-live-22c55e?style=flat-square)](https://small-biz-ops-demo.onrender.com/)
+
 Local-first [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server for day-to-day small business work: **tasks**, **expenses**, **customers / CRM notes**, **inventory**, and **sample-based financial analytics**. Live ops data lives in **SQLite** on your machine (no cloud by default); bundled CSVs are **synthetic** for demos.
 
 ## Requirements
